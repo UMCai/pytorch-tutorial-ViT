@@ -1,4 +1,7 @@
 # pytotch-tutorial-ViT
-To reproduce the ViT model in plain pytorch 
 
+[paper](https://arxiv.org/abs/2010.11929)
+
+
+Environment setup:
 
