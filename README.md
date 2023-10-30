@@ -4,4 +4,4 @@
 
 
 Environment setup:
-
+use conda
