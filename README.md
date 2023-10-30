@@ -1,4 +1,4 @@
-# pytotch-tutorial-ViT
+# pytorch-tutorial-ViT
 
 [paper](https://arxiv.org/abs/2010.11929)
 
