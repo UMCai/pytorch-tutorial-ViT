@@ -3,17 +3,18 @@ import time
 import os
 import Config
 
-
-
 device = Config.DEVICE
 model_path = Config.MODEL_PATH
 
 ##################################################################
 # This is a plain pytorch training loop with validation embedded
+# But the problem is also clear, no logging for loss, no visulaization for the loss/accuracy
+# to improve it, we can use ignite
 def train_classification_model(data, model, criterion, optimizer, scheduler, num_epochs=25):
     since = time.time()
 
     dataloaders, class_names, dataset_sizes = data
+    print("class names are: ", class_names)
     best_model_params_path = os.path.join(model_path, 'best_model_params.pt')
 
     torch.save(model.state_dict(), best_model_params_path)
@@ -82,7 +83,11 @@ def train_classification_model(data, model, criterion, optimizer, scheduler, num
 
 
 ##################################################################
-# This uses pytorch ignite
+# This uses pytorch ignite + tensorboard logger 
+from ignite.engine import Engine, Events, create_supervised_trainer, create_supervised_evaluator
+from ignite.metrics import Accuracy, Loss
+from ignite.handlers import ModelCheckpoint
+from ignite.contrib.handlers import TensorboardLogger, global_step_from_engine
 
 
 ##################################################################
