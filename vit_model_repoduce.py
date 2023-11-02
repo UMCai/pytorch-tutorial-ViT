@@ -141,7 +141,7 @@ class PatchEmbedding(nn.Module):
 # ViT
 class ViT(nn.Module):
     def __init__(self, img_size, patch_size, num_hiddens, mlp_num_hiddens,
-                 num_heads, num_blks, emb_dropout, blk_dropout,
+                 num_heads, num_blks, emb_dropout = 0.0, blk_dropout = 0.0,
                  use_bias=False, num_classes=10):
         super().__init__()
         self.num_blks = num_blks
