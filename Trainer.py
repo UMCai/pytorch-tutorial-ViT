@@ -89,6 +89,7 @@ def train_classification_model(data, model, criterion, optimizer, scheduler, num
 from ignite.engine import Engine, Events, create_supervised_trainer, create_supervised_evaluator
 from ignite.metrics import Accuracy, Loss
 from ignite.handlers import ModelCheckpoint
+from ignite.handlers.param_scheduler import LRScheduler
 from ignite.contrib.handlers import TensorboardLogger, global_step_from_engine
 
 def get_trainer(dataloaders, model, optimizer, criterion, log_interval = 100):
@@ -124,11 +125,13 @@ def get_trainer(dataloaders, model, optimizer, criterion, log_interval = 100):
     def score_function(engine):
         return engine.state.metrics["accuracy"]
 
+    model_checkpoint_path = Config.MODEL_PATH
     # Checkpoint to store n_saved best models wrt score function
     model_checkpoint = ModelCheckpoint(
-        "checkpoint", 
+        model_checkpoint_path, 
         n_saved=2,
         filename_prefix="best",
+        require_empty=False,
         score_function=score_function,
         score_name="accuracy",
         global_step_transform=global_step_from_engine(trainer), # helps fetch the trainer's state
@@ -159,10 +162,15 @@ def get_trainer(dataloaders, model, optimizer, criterion, log_interval = 100):
         )
     return trainer
 
-def train_classification_model_ignite(data, model, criterion, optimizer, num_epochs = 5):
+def train_classification_model_ignite(data, model, criterion, optimizer, scheduler = None, num_epochs = 5):
     dataloaders, class_names, dataset_sizes = data
     print("class names are: ", class_names)
     trainer = get_trainer(dataloaders, model, optimizer, criterion)
+    if scheduler is not None:
+        scheduler = LRScheduler(scheduler)
+        def print_lr():
+            print(f"learning rate: {optimizer.param_groups[0]['lr']}")
+        trainer.add_event_handler(Events.EPOCH_COMPLETED, print_lr)
     trainer.run(dataloaders['train'], max_epochs=num_epochs)
 
 ##################################################################

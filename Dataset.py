@@ -8,6 +8,7 @@ from torch.utils.data import Dataset
 hymenoptera_data_dir = Config.DATA_PATH
 batch_size = Config.BATCH_SIZE
 img_size = Config.IMG_SIZE
+num_workers = Config.NUM_WORKERS
 
 data_transforms = {
     'train': transforms.Compose([
@@ -32,7 +33,7 @@ def hymenoptera_dataloaders():
                                           data_transforms[x])
                   for x in ['train', 'val']}
     dataloaders = {x: torch.utils.data.DataLoader(image_datasets[x], batch_size=batch_size,
-                                             shuffle=True, pin_memory = True, num_workers=2)
+                                             shuffle=True, pin_memory = True, num_workers=num_workers)
                  for x in ['train', 'val']}
     dataset_sizes = {x: len(image_datasets[x]) for x in ['train', 'val']}
     print(dataset_sizes)
