@@ -32,7 +32,6 @@ The file structure:
 2. **src**: the scripts that are used to support the main.py
     * **model.py**: includes nn.Module pytorch style class, torchvision style class (with pretrain), HF transformers class
     * **trainer.py**: includes pytorch training loop, ignite training loop, with tensorboard and different learning rate scheduler   
-    * 
-    *
+
 3. **demo**: the demo notebook for visualization (all the notebooks are stored here)
 4. **main.py**: the entry point 

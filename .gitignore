@@ -160,3 +160,5 @@ cython_debug/
 #.idea/
 tutorials/ignite_tutorials/checkpoint
 tutorials/ignite_tutorials/tb-logger
+tb-logger/*
+checkpoint/*

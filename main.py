@@ -1,6 +1,6 @@
 import Config
 from Dataset import hymenoptera_dataloaders
-from Trainer import train_classification_model
+from Trainer import train_classification_model, train_classification_model_ignite
 import torch.nn as nn
 import torch.backends.cudnn as cudnn
 from torch.optim import lr_scheduler
@@ -21,6 +21,7 @@ if __name__ == '__main__':
     model = model.to(device)
     optimizer = optim.SGD(model.parameters(), lr=lr, momentum=0.9)
     exp_lr_scheduler = lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
-    model = train_classification_model(data, model, criterion, optimizer,
-                         exp_lr_scheduler, num_epochs=num_epochs)
+    #model = train_classification_model(data, model, criterion, optimizer,
+    #                     exp_lr_scheduler, num_epochs=num_epochs)
+    train_classification_model_ignite(data, model, criterion, optimizer, num_epochs=num_epochs)
 

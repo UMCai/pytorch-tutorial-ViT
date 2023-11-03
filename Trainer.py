@@ -84,10 +84,85 @@ def train_classification_model(data, model, criterion, optimizer, scheduler, num
 
 ##################################################################
 # This uses pytorch ignite + tensorboard logger 
+# 
+# https://pytorch.org/ignite/generated/ignite.handlers.param_scheduler.LRScheduler.html#ignite.handlers.param_scheduler.LRScheduler
 from ignite.engine import Engine, Events, create_supervised_trainer, create_supervised_evaluator
 from ignite.metrics import Accuracy, Loss
 from ignite.handlers import ModelCheckpoint
 from ignite.contrib.handlers import TensorboardLogger, global_step_from_engine
 
+def get_trainer(dataloaders, model, optimizer, criterion, log_interval = 100):
+
+    train_loader = dataloaders['train']
+    val_loader = dataloaders['val']
+    trainer = create_supervised_trainer(model, optimizer, criterion, device)
+    val_metrics = {
+        "accuracy": Accuracy(),
+        "loss": Loss(criterion)
+    }
+
+    train_evaluator = create_supervised_evaluator(model, metrics=val_metrics, device=device)
+    val_evaluator = create_supervised_evaluator(model, metrics=val_metrics, device=device)
+    # How many batches to wait before logging training status
+
+    def log_training_loss(engine):
+        print(f"Epoch[{engine.state.epoch}], Iter[{engine.state.iteration}] Loss: {engine.state.output:.2f}")
+    trainer.add_event_handler(Events.ITERATION_COMPLETED(every=log_interval), log_training_loss)
+
+    def log_training_results(trainer):
+        train_evaluator.run(train_loader)
+        metrics = train_evaluator.state.metrics
+        print(f"Training Results - Epoch[{trainer.state.epoch}] Avg accuracy: {metrics['accuracy']:.2f} Avg loss: {metrics['loss']:.2f}")
+    trainer.add_event_handler(Events.EPOCH_COMPLETED, log_training_results)
+
+    def log_validation_results(trainer):
+        val_evaluator.run(val_loader)
+        metrics = val_evaluator.state.metrics
+        print(f"Validation Results - Epoch[{trainer.state.epoch}] Avg accuracy: {metrics['accuracy']:.2f} Avg loss: {metrics['loss']:.2f}")
+    trainer.add_event_handler(Events.EPOCH_COMPLETED, log_validation_results)
+
+    def score_function(engine):
+        return engine.state.metrics["accuracy"]
+
+    # Checkpoint to store n_saved best models wrt score function
+    model_checkpoint = ModelCheckpoint(
+        "checkpoint", 
+        n_saved=2,
+        filename_prefix="best",
+        score_function=score_function,
+        score_name="accuracy",
+        global_step_transform=global_step_from_engine(trainer), # helps fetch the trainer's state
+    )
+    
+    # Save the model after every epoch of val_evaluator is completed
+    val_evaluator.add_event_handler(Events.COMPLETED, model_checkpoint, {"model": model})
+
+    # Define a Tensorboard logger
+    tb_logger = TensorboardLogger(log_dir="tb-logger")
+
+    # Attach handler to plot trainer's loss every 100 iterations
+    tb_logger.attach_output_handler(
+        trainer,
+        event_name=Events.ITERATION_COMPLETED(every=log_interval),
+        tag="training",
+        output_transform=lambda loss: {"batch_loss": loss},
+    )
+
+    # Attach handler for plotting both evaluators' metrics after every epoch completes
+    for tag, evaluator in [("training", train_evaluator), ("validation", val_evaluator)]:
+        tb_logger.attach_output_handler(
+            evaluator,
+            event_name=Events.EPOCH_COMPLETED,
+            tag=tag,
+            metric_names="all",
+            global_step_transform=global_step_from_engine(trainer),
+        )
+    return trainer
+
+def train_classification_model_ignite(data, model, criterion, optimizer, num_epochs = 5):
+    dataloaders, class_names, dataset_sizes = data
+    print("class names are: ", class_names)
+    trainer = get_trainer(dataloaders, model, optimizer, criterion)
+    trainer.run(dataloaders['train'], max_epochs=num_epochs)
 
 ##################################################################
