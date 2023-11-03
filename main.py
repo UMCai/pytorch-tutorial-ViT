@@ -1,3 +1,6 @@
+import warnings
+warnings.filterwarnings("ignore")
+
 import Config
 from Dataset import hymenoptera_dataloaders
 from Trainer import train_classification_model, train_classification_model_ignite
@@ -42,6 +45,7 @@ def main():
 
 
 if __name__ == '__main__':
+    
     main()
 
 
