@@ -19,8 +19,9 @@ def imshow(inp, title=None):
         plt.title(title)
         
         
-        
+# TODO: add more batch plot saving features        
 def visualize_model(data, model, num_images=4, img_name = "plot_tmp"):
+
     model.eval()
     model.to(device)
     images_so_far = 0
