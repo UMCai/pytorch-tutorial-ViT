@@ -96,4 +96,18 @@ Check *class ScaledDotProductAttention* in *vit_model_reproduce.py*.
 
 In general, you need to have three matrix: key [n,d], query [m,d], and value [m,v]. 
 
-* key and query con be treated as a key, lock pair. So assuming if you have n different keys with m different locks, we want to know which key is paired with which lock (query). How we can decide if key and lock is a match? We use dot-product. For any one key and one lock, there is a [d,] vector, by dot-product, we will output just a single value, a value reach its max when key and query are in the same direction, and reach its min when the key and query are in opposite direction. For example, $k = [0.5, 0.5], q1 = [1, 1], q2 = [1,-1], q3 = [-1,-1]$, the dot-product between k and q1 is the biggest (because they are towards the same direction 45 degree rotated from X-axis); the dot-product between k and q2, the value is 0, because they are perpendicular, but that's not the worst; the dot-product between k and q3 is negative, which is the smallest, (because they are in the opposite direction) 
+* key and query con be treated as a key, lock pair. So assuming if you have n different keys with m different locks, we want to know which key is paired with which lock (query). How we can decide if key and lock is a match? We use dot-product. For any one key and one lock, there is a [d,] vector, by dot-product, we will output just a single value, a value reach its max when key and query are in the same direction, and reach its min when the key and query are in opposite direction. For example, $k = [0.5, 0.5], q1 = [1, 1], q2 = [1,-1], q3 = [-1,-1]$, the dot-product between k and q1 is the biggest (because they are towards the same direction 45 degree rotated from X-axis); the dot-product between k and q2, the value is 0, because they are perpendicular, but that's not the worst; the dot-product between k and q3 is negative, which is the smallest, (because they are in the opposite direction).
+
+#### 2.3.2 what is multi-head attention
+check *class MultiHeadAttention* in *vit_model_reproduce.py*
+
+Always remember that multi-head attention did not change the shape of tensor! And the number of heads needs to be divided by feature number! 
+
+In general, multi-head is a way to let the attention mechanism works with multiply channels, each channel can pay attention to different features or patterns. Just like convolution can learn different filters to detect edges, multi-head attention can do the same, but better (because there is no locality as pre-knowledge). From the figure below, there are three key points:
+1. attention has no locality, this means even at the shallow layer of neural network, two distant region are pay attnetion with each other.
+2. convolution has inductive bias and locality. This is why convolution can only learn global features at the deep layers of neural network.
+3. 
+
+<p align="center">
+<img src="./img/multihead_attention.png">
+</p>
