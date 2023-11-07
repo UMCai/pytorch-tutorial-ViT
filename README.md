@@ -76,6 +76,24 @@ But why they are equivalent? Let's prove it!
 * Firstly we will see how the patch works. let's assume the input image is $X \in \mathbb{R}^{3 \times H \times W}$. By creating $P \times P$ patches, $X$ is reshaped as $X \in \mathbb{R}^{3 \times (\frac{H}{P} \times P) \times (\frac{W}{P} \times P)}$, and further into $X \in \mathbb{R}^{(\frac{H}{P} \times \frac{W}{P}) \times (P \times P \times 3)}$. Since the number of patches is $n_{p} = \frac{H}{P} \times \frac{W}{P}$, the whole thing can be simplified as $X \in \mathbb{R}^{n_{p} \times (P \times P \times 3)}$. After flatten each patches, assume that $D_{patch} = P \times P \times 3$, we have a tensor $X_{flatten} \in \mathbb{R}^{n_{p} \times D_{patch}}$
 * Next, let's see how linear project works. By using a linear layer that maps $D_{patch}$ dimension to $D$ dimension, the weight should be $W_{linear} \in \mathbb{R}^{D_{patch} \times D}$. So by using matrix multiplication $X_{flatten} \times W_{linear} \in \mathbb{R}^{n_{p} \times D_{patch}} \times \mathbb{R}^{D_{patch} \times D} = \mathbb{R}^{n_{p} \times D}$, and here we get the embedded $n_{p}$ patches with feature $D$. 
 
-By changing slightly, 
+By changing the order of tensor operation slightly, we can achieve the same thing in a different way. 
+* Firstly, remember that $W_{linear} \in  \mathbb{R}^{D_{patch} \times D}$, this can be reformed as a tensor $ W_{linear} = W_{reform} \in \mathbb{R}^{(P \times P \times 3) \times D} = \mathbb{R}^{3 \times D \times (P \times P)}$. Does this look familiar to you? **This is a 2D convolution layer with input channel = 3, output channel = D, and kernel size = (P, P)** 
+* So the input image has shape $X \in \mathbb{R}^{3 \times H \times W}$, but reshaping it into $X_{conv} \in \mathbb{R}^{(\frac{H}{P} \times \frac{W}{P}) \times (P \times P \times 3)}$. By tensor multiplication between $X_{conv}$ and $W_{reform}$, the result stays the same.
+$$X_{conv} \times W_{reform} \in  \mathbb{R}^{n_p \times (P \times P \times 3)} \times \mathbb{R}^{(P \times P \times 3) \times D} = \mathbb{R}^{n_p \times D}$$
 
+### 2.2 Position embedding
+There are a lot of different methods to embed the position, but here, we simple use the most straightforward one, random value that can be learnt during the training. For each token($n_p$ patches, and one class token), we create random series to add into the patch embedding. Be careful, here we use add, not concat.
 
+### 2.3 Transformer Encoder
+In this section, we will start with answering 
+1. what is scaled dot-product attention, 
+2. what is multi-head attention,
+3. what does MLP look like,
+4. why using layernorm.
+
+#### 2.3.1 What is scaled dot-product attention
+Check *class ScaledDotProductAttention* in *vit_model_reproduce.py*. 
+
+In general, you need to have three matrix: key [n,d], query [m,d], and value [m,v]. 
+
+* key and query con be treated as a key, lock pair. So assuming if you have n different keys with m different locks, we want to know which key is paired with which lock (query). How we can decide if key and lock is a match? We use dot-product. For any one key and one lock, there is a [d,] vector, by dot-product, we will output just a single value, a value reach its max when key and query are in the same direction, and reach its min when the key and query are in opposite direction. For example, $k = [0.5, 0.5], q1 = [1, 1], q2 = [1,-1], q3 = [-1,-1]$, the dot-product between k and q1 is the biggest (because they are towards the same direction 45 degree rotated from X-axis); the dot-product between k and q2, the value is 0, because they are perpendicular, but that's not the worst; the dot-product between k and q3 is negative, which is the smallest, (because they are in the opposite direction) 
