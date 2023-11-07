@@ -118,7 +118,6 @@ class ViTBlock(nn.Module):
 
 
 ###########
-# ViTMLP
 # Patch embedding
 class PatchEmbedding(nn.Module):
     def __init__(self, img_size=96, patch_size=16, num_hiddens=512):

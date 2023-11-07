@@ -5,7 +5,7 @@ import Config
 import torch
 from torch.utils.data import Dataset
 
-hymenoptera_data_dir = Config.DATA_PATH
+hymenoptera_data_dir = Config.HYMENOPTERA_DATA_PATH
 batch_size = Config.BATCH_SIZE
 img_size = Config.IMG_SIZE
 num_workers = Config.NUM_WORKERS
@@ -39,4 +39,5 @@ def hymenoptera_dataloaders():
     print(dataset_sizes)
     class_names = image_datasets['train'].classes
     return dataloaders, class_names, dataset_sizes
+
 
