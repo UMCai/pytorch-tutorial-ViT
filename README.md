@@ -8,13 +8,13 @@ This repo aims to reproduce the code from [paper](https://arxiv.org/abs/2010.119
 
 
 ## 0. Environment setup:
-
 Use conda to create the virtual env, all the python packages are explicitly stored within.
 
 Open conda prompt and type the following command:
 ```
 conda create --name myenv --file requirements_torch_monai_env.txt
 ```
+
 
 ## 1. Prepare dataset
 In this tutorial, we choose to use two very simple classification dataset -- hymenoptera dataset, the download link is [here](https://download.pytorch.org/tutorial/hymenoptera_data.zip) and kaggle dog tiny dataset, link is [here](https://www.kaggle.com/c/dog-breed-identification). But first, we only use hymenoptera (because it is so simple)
@@ -28,7 +28,9 @@ Dataset is used to transform the data path into data (tensor). And dataloader is
 2. class_names -- a list includes all the class names with orders
 3. dataset_size -- a dict with 'train' and 'val' as keys
 
+
 ## 2. ViT model reproduction
+
 This is the main topic for this tutorial, please check *vit_model_reproduce.py*.
 
 Firstly, let's have a look at the model structure.
@@ -48,6 +50,7 @@ A very clear model structure can be seen here, let's focus on these key elements
     * **Norm**, always LayerNorm
 4. **MLP head**, a classification head
 
+
 ### 2.0 The data flow of vision transformer  
 (B = batch size, 3 = # of RGB channels, H, W = Height, width, $n_p$ = # of patches, D(or d) = # of hiddens)
 
@@ -58,6 +61,7 @@ A very clear model structure can be seen here, let's focus on these key elements
 4. feed the embedded patches to the transformer encoder (several blocks of *class ViTBlock*), the output shape after each transformer layers stays the same **[B, $n_p$+1, d]**
 5. take the features (X -> [B, $n_p$+1, d]) related to class token **X[:, 0, :]**, get output as shape **[B, 1, d] = [B, d]**
 6. feed into *MLP_head* **[B, # of class]**
+
 
 ### 2.1 PatchEmbedding
 Check *class PatchEmbedding* in *vit_model_reproduce.py*, and test the complete code in *test_vit.ipynb*. (P = patch size)
@@ -83,10 +87,12 @@ By changing the order of tensor operation slightly, we can achieve the same thin
 * So the input image has shape $X \in \mathbb{R}^{3 \times H \times W}$, but reshaping it into $X_{conv} \in \mathbb{R}^{(\frac{H}{P} \times \frac{W}{P}) \times (P \times P \times 3)}$. By tensor multiplication between $X_{conv}$ and $W_{reform}$, the result stays the same.
 $$X_{conv} \times W_{reform} \in  \mathbb{R}^{n_p \times (P \times P \times 3)} \times \mathbb{R}^{(P \times P \times 3) \times D} = \mathbb{R}^{n_p \times D}$$
 
+
 ### 2.2 Position embedding
 There are a lot of different methods to embed the position, but here, we simple use the most straightforward one, random value that can be learnt during the training. For each token($n_p$ patches, and one class token), we create random series to add into the patch embedding. Be careful, here we use add, not concat.
 
 More details [here](https://jaketae.github.io/study/relative-positional-encoding/).
+
 
 ### 2.3 Transformer Encoder
 In this section, we will start with answering 
@@ -201,4 +207,12 @@ check *main.py*
 
 The goal of this tutorial is to have a deeper understanding on vision transformer. Nowadays, developers are focusing on applying the SOTA models on their customized dataset, which makes sense because why reinvent the wheel? But it is different for researchers in deep learning field. For deep learning with computer vision, ViT is a build-in model in many open source framework, like pytorch, tensorflow. Many cool models use ViT as backbone for different computer vision tasks. Of course, eventually, we all use torchvision.models.vit, but how many people really understand every detail of ViT? If you do not understand how does ViT really works, then how can you make innovation upon it?
 
+## 6. Potential innovation
+1. play with cls token: as you can see here, cls token is used for classification, but why not use it for localization or other tasks?
+2. attention innovation: why not use something else to replace transformer? like retentive transformer maybe?
+3. any better way to exploit the other number of patch features? (you take the first one for classification) The other parts could be used for segmentation, detection?
+4. any good way to fine-tuning the model? which part to freeze, which part not, LoRA?
 
+## 7. Next step
+1. pytorch tutorial BERT reproduce!
+2. pytorch tutorial CLIP reproduce!
