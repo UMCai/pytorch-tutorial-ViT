@@ -37,6 +37,8 @@ Firstly, let's have a look at the model structure.
 <img src="./img/ViT_model_structure.png">
 </p>
 
+([image ref](https://arxiv.org/abs/2010.11929))
+
 A very clear model structure can be seen here, let's focus on these key elements:
 1. **Patch**, divide one image into small patches
 2. **Position embedding**, a common thing for transformer based model, to learn the location of each patch
@@ -47,14 +49,14 @@ A very clear model structure can be seen here, let's focus on these key elements
 4. **MLP head**, a classification head
 
 ### 2.0 The data flow of vision transformer  
-(B = batch size, 3 = # of RGB channels, H, W = Height, width, nP = # of patches, D(d) = # of hiddens)
+(B = batch size, 3 = # of RGB channels, H, W = Height, width, $n_p$ = # of patches, D(or d) = # of hiddens)
 
 0. input images with shape **[B, 3, H, W]**
-1. devide each image into small patches *class PatchEmbedding*, embedded patches with shape **[B, P, d]**
-2. concat a *cls_token* to the embedded patches, the shape will be **[B, P+1, d]**
-3. add (not concat) *position_embedding* to it **[B, P+1, d]**
-4. feed the embedded patches to the transformer encoder (several blocks of *class ViTBlock*), the output shape after each transformer layers stays the same **[B, P+1, d]**
-5. take the features (X -> [B, P+1, d]) related to class token **X[:, 0, :]**, get output as shape **[B, 1, d] = [B, d]**
+1. devide each image into small patches *class PatchEmbedding*, embedded patches with shape **[B, $n_p$, d]**
+2. concat a *cls_token* to the embedded patches, the shape will be **[B, $n_p$+1, d]**
+3. add (not concat) *position_embedding* to it **[B, $n_p$+1, d]**
+4. feed the embedded patches to the transformer encoder (several blocks of *class ViTBlock*), the output shape after each transformer layers stays the same **[B, $n_p$+1, d]**
+5. take the features (X -> [B, $n_p$+1, d]) related to class token **X[:, 0, :]**, get output as shape **[B, 1, d] = [B, d]**
 6. feed into *MLP_head* **[B, # of class]**
 
 ### 2.1 PatchEmbedding
@@ -98,6 +100,8 @@ In general, you need to have three matrix: key [n,d], query [m,d], and value [m,
 
 * key and query con be treated as a key, lock pair. So assuming if you have n different keys with m different locks, we want to know which key is paired with which lock (query). How we can decide if key and lock is a match? We use dot-product. For any one key and one lock, there is a [d,] vector, by dot-product, we will output just a single value, a value reach its max when key and query are in the same direction, and reach its min when the key and query are in opposite direction. For example, $k = [0.5, 0.5], q1 = [1, 1], q2 = [1,-1], q3 = [-1,-1]$, the dot-product between k and q1 is the biggest (because they are towards the same direction 45 degree rotated from X-axis); the dot-product between k and q2, the value is 0, because they are perpendicular, but that's not the worst; the dot-product between k and q3 is negative, which is the smallest, (because they are in the opposite direction).
 
+The formula for self-attention is in appendix A equation (5-7).
+
 #### 2.3.2 what is multi-head attention
 check *class MultiHeadAttention* in *vit_model_reproduce.py*
 
@@ -106,8 +110,93 @@ Always remember that multi-head attention did not change the shape of tensor! An
 In general, multi-head is a way to let the attention mechanism works with multiply channels, each channel can pay attention to different features or patterns. Just like convolution can learn different filters to detect edges, multi-head attention can do the same, but better (because there is no locality as pre-knowledge). From the figure below, there are three key points:
 1. attention has no locality, this means even at the shallow layer of neural network, two distant region are pay attnetion with each other.
 2. convolution has inductive bias and locality. This is why convolution can only learn global features at the deep layers of neural network.
-3. 
+3. each head pay attention to different dstance region at the very begining, therefore no need to have a lot of heads if the image is not super big, somewhere between 5-10 would be enough.
 
 <p align="center">
 <img src="./img/multihead_attention.png">
 </p>
+
+([image ref](https://arxiv.org/abs/2010.11929))
+
+The detail math formula can be found in appendix A equation (8). 
+
+
+#### 2.3.3 what does MLP look like
+check *class ViTMLP* in *vit_model_reproduce.py*
+From paper, the authers only said this:
+> The MLP contains two layers with a GELU non-linearity.
+
+By checking some details in the original code, the ViT MLP is:
+~~~
+X = linear_layer(x)
+x = gelu_activation(x)
+x = dropout(x)
+x = linear_layer(x)
+x = dropout(x)
+~~~  
+
+So what is the difference between GeLU and ReLU and ELU?
+<p align="center">
+<img src="./img/GeLU.png">
+</p>
+
+([image ref](https://arxiv.org/abs/1606.08415v5))
+
+Well, in this figure, you can see quite clear. ReLU is non-differentiate at origin, but GeLU is. ELU start from -1(when x is negative infinite) and become linear after passing origin. The curvature can be controlled by the hyperparamaters.
+
+
+#### 2.3.4 why using layernorm
+I find this [post](https://stats.stackexchange.com/questions/474440/why-do-transformers-use-layer-norm-instead-of-batch-norm) is quite useful, here is the quote:
+> in batchnorm, the mean and variance statistics used for normalization are calculated across all elements of all instances in a batch, for each feature independently.
+
+>  for layernorm, the statistics are calculated across the feature dimension, for each element and instance independently.
+
+Layernorm is very suitable for NLP transformer models because each sentence could have different length, so the calculation on feature dimension is more than proper. 
+
+But personally, batchnorm is unfit for NLP, but not for CV. So you are free to try to use batchnorm instead of layernorm here, but since the origin paper uses layernorm, we will continue this way.
+
+### 2.4 MLP head
+check *class ViT* in *vit_model_reproduce.py*.
+
+**IMPORTANT:** this MLP head is only work on *cls token* for classification, the orange block in the first figure.
+
+When the data flow through the transformer encoder, the output (X) shape is **[B, $n_p$ + 1, d]**, where B is batch size, d is feature, and $n_p$ is the number of patches, **1** represents *cls token*. We only take the part belongs to *cls token* for classification, **$X[:,0] \in \mathbb{R}^{B \times d}$**. 
+
+So the structure of this MLP head is:
+~~~
+x = X[:,0]
+x = layernorm(x)
+x = linear_layer(x)
+~~~
+Where the linear layer is a projection layer mapping d into number of classes. In the original paper, the dataset is imagenet, which has 1000 classes, but in our case, we only have 2 classes ('ants', 'bees')
+
+### 2.5 Models
+check *def ViT_reproduce_t_16* and *def ViT_b_16* in *Model.py*.
+
+* *ViT_reproduce_t_16* is the function only using the cde from *vit_model_reproduce.py*
+* *ViT_b_16* uses the build-in function from torchvision. This is the function that can be used as fune-tuning.
+
+
+## 3. training
+check *train_classification_model* and *train_classification_model_ignite* in *Trainer.py*
+
+Inside you can find two different training functions for training the model, 
+* *train_classification_model* uses vanilla pytorch training loop
+* *train_classification_model_ignite* uses ignite for training, it includes a better logger which can be visualized in tensorboard.
+
+For training the models that mentioned here
+~~~
+$ python main.py
+~~~
+
+## 4. Inference
+check *def visualize_model* in *Utils.py*
+
+This function can visualize the first batch of validation data.
+
+## 5. Conclusion
+check *main.py*
+
+The goal of this tutorial is to have a deeper understanding on vision transformer. Nowadays, developers are focusing on applying the SOTA models on their customized dataset, which makes sense because why reinvent the wheel? But it is different for researchers in deep learning field. For deep learning with computer vision, ViT is a build-in model in many open source framework, like pytorch, tensorflow. Many cool models use ViT as backbone for different computer vision tasks. Of course, eventually, we all use torchvision.models.vit, but how many people really understand every detail of ViT? If you do not understand how does ViT really works, then how can you make innovation upon it?
+
+
