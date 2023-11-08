@@ -91,10 +91,17 @@ from ignite.metrics import Accuracy, Loss
 from ignite.handlers import ModelCheckpoint
 from ignite.handlers.param_scheduler import LRScheduler
 from ignite.contrib.handlers import TensorboardLogger, global_step_from_engine
-
-def get_trainer(dataloaders, model, optimizer, criterion, log_interval = 100):
-
+import torchvision
+def get_trainer(dataloaders, model, optimizer, criterion, model_checkpoint_path, log_interval = 100):
     train_loader = dataloaders['train']
+    images, labels = next(iter(train_loader))
+    img_grid = torchvision.utils.make_grid(images)
+    from Utils import matplotlib_imshow
+    # show images
+    matplotlib_imshow(img_grid, one_channel=True)
+    # write to tensorboard
+    
+
     val_loader = dataloaders['val']
     trainer = create_supervised_trainer(model, optimizer, criterion, device)
     val_metrics = {
@@ -125,11 +132,11 @@ def get_trainer(dataloaders, model, optimizer, criterion, log_interval = 100):
     def score_function(engine):
         return engine.state.metrics["accuracy"]
 
-    model_checkpoint_path = Config.MODEL_PATH
+    
     # Checkpoint to store n_saved best models wrt score function
     model_checkpoint = ModelCheckpoint(
         model_checkpoint_path, 
-        n_saved=2,
+        n_saved=1,
         filename_prefix="best",
         require_empty=False,
         score_function=score_function,
@@ -141,7 +148,12 @@ def get_trainer(dataloaders, model, optimizer, criterion, log_interval = 100):
     val_evaluator.add_event_handler(Events.COMPLETED, model_checkpoint, {"model": model})
 
     # Define a Tensorboard logger
-    tb_logger = TensorboardLogger(log_dir="tb-logger")
+    tb_logger = TensorboardLogger(log_dir="tb-logger/test1")
+
+    # after creating a tensorboardlogger, it inheriate from summarywriter, 
+    # so you can also use add_image, add_graph, add_pr_curve, etc
+    tb_logger.add_image('one_batch_images', img_grid)
+    #tb_logger.add_graph(model.to(device), images.to(device))
 
     # Attach handler to plot trainer's loss every 100 iterations
     tb_logger.attach_output_handler(
@@ -162,15 +174,16 @@ def get_trainer(dataloaders, model, optimizer, criterion, log_interval = 100):
         )
     return trainer
 
-def train_classification_model_ignite(data, model, criterion, optimizer, scheduler = None, num_epochs = 5):
+def train_classification_model_ignite(data, model, criterion, optimizer, model_checkpoint_path, scheduler = None, num_epochs = 5):
     dataloaders, class_names, dataset_sizes = data
     print("class names are: ", class_names)
-    trainer = get_trainer(dataloaders, model, optimizer, criterion)
+    trainer = get_trainer(dataloaders, model, optimizer, criterion, model_checkpoint_path)
     if scheduler is not None:
         scheduler = LRScheduler(scheduler)
         def print_lr():
             print(f"learning rate: {optimizer.param_groups[0]['lr']}")
         trainer.add_event_handler(Events.EPOCH_COMPLETED, print_lr)
+    print('training start!')
     trainer.run(dataloaders['train'], max_epochs=num_epochs)
 
 ##################################################################

@@ -17,7 +17,7 @@ conda create --name myenv --file requirements_torch_monai_env.txt
 ```
 
 ## 1. Prepare dataset
-In this tutorial, we choose to use a very simple classification dataset -- hymenoptera dataset, the download link is [here](https://download.pytorch.org/tutorial/hymenoptera_data.zip).
+In this tutorial, we choose to use two very simple classification dataset -- hymenoptera dataset, the download link is [here](https://download.pytorch.org/tutorial/hymenoptera_data.zip) and kaggle dog tiny dataset, link is [here](https://www.kaggle.com/c/dog-breed-identification). But first, we only use hymenoptera (because it is so simple)
 
 In this simple classiciation task, there are two classes: ants and bees. If you are not familiar with pytorch dataset and dataloader, please check [official pytorch info](https://pytorch.org/tutorials/beginner/basics/data_tutorial.html), or *tutorials/basic_pytorch_tutorials/check_different_datasets.ipynb*
 
@@ -85,6 +85,8 @@ $$X_{conv} \times W_{reform} \in  \mathbb{R}^{n_p \times (P \times P \times 3)} 
 
 ### 2.2 Position embedding
 There are a lot of different methods to embed the position, but here, we simple use the most straightforward one, random value that can be learnt during the training. For each token($n_p$ patches, and one class token), we create random series to add into the patch embedding. Be careful, here we use add, not concat.
+
+More details [here](https://jaketae.github.io/study/relative-positional-encoding/).
 
 ### 2.3 Transformer Encoder
 In this section, we will start with answering 

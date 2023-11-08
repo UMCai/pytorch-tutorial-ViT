@@ -2,6 +2,9 @@ from torchvision import models
 import torch.nn as nn
 from vit_model_reproduce import ViT
 
+
+
+
 #############
 # ResNet (torchvision)
 # we start from a simple convolutional net to fit the pipeline

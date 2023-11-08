@@ -2,14 +2,13 @@ import warnings
 warnings.filterwarnings("ignore")
 
 import Config
-from Dataset import hymenoptera_dataloaders
+from Dataset import get_data
 from Trainer import train_classification_model, train_classification_model_ignite
 import torch
 import torch.nn as nn
 import torch.backends.cudnn as cudnn
 from torch.optim import lr_scheduler
 import torch.optim as optim
-#from torchsummary import summary
 cudnn.benchmark = True
 
 
@@ -20,9 +19,10 @@ def main():
     num_epochs = Config.NUM_EPOCHS
     lr = Config.LR
     mode = Config.MODE
+    data_name = Config.DATA_NAME
+    model_checkpoint_path = Config.MODEL_PATH
 
-    data = hymenoptera_dataloaders()
-    # print(summary(model, (3, 224, 224 )))
+    data = get_data(data_name=data_name)
     
     if mode == 'training':
         print('mode is:', mode)
@@ -33,7 +33,7 @@ def main():
 
         #model = train_classification_model(data, model, criterion, optimizer,
         #                     exp_lr_scheduler, num_epochs=num_epochs)
-        train_classification_model_ignite(data, model, criterion, optimizer, scheduler=exp_lr_scheduler, num_epochs=num_epochs)
+        train_classification_model_ignite(data, model, criterion, optimizer, model_checkpoint_path, scheduler=exp_lr_scheduler, num_epochs=num_epochs)
     
     if mode == 'inference':
         print('mode is:', mode)
