@@ -214,5 +214,7 @@ The goal of this tutorial is to have a deeper understanding on vision transforme
 4. any good way to fine-tuning the model? which part to freeze, which part not, LoRA?
 
 ## 7. Next step
-1. pytorch tutorial BERT reproduce!
-2. pytorch tutorial CLIP reproduce!
+1. monai tutorial 3D Unet reproduce!
+2. pytorch tutorial BERT reproduce!
+3. pytorch tutorial CLIP reproduce!
+4. monai tutorial swin unetr reproduce!
