@@ -6,6 +6,7 @@ import Config
 device = Config.DEVICE
 model_path = Config.MODEL_PATH
 
+
 ##################################################################
 # This is a plain pytorch training loop with validation embedded
 # But the problem is also clear, no logging for loss, no visulaization for the loss/accuracy
