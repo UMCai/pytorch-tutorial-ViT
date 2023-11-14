@@ -10,6 +10,3 @@ HYMENOPTERA_FIGURE_PATH = r"C:\Users\Shizh\OneDrive - Maastricht University\Data
 DOGTINY_FIGURE_PATH = r"C:\Users\Shizh\OneDrive - Maastricht University\Data\kaggle_dog_tiny\figures"
 
 IMG_SIZE = 224  # this is the input image size for ViT
-
-
-
