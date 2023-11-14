@@ -1,0 +1,13 @@
+# data
+data_name: 'dogtiny'
+num_classes: 120
+
+# model
+model_name: 'ViT_b_16'
+num_epochs: 5
+lr: 0.001
+batch_size: 4
+num_workers: 2
+
+# mode
+mode: 'training'

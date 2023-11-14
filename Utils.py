@@ -5,7 +5,6 @@ import Config
 import os
 
 device = Config.DEVICE
-figure_path = Config.FIGURE_PATH
 
 def imshow(inp, title=None):
     """Display image for Tensor."""
@@ -20,7 +19,7 @@ def imshow(inp, title=None):
         
         
 # TODO: add more batch plot saving features        
-def visualize_model(data, model, num_images=4, img_name = "plot_tmp"):
+def visualize_model(data, model, figure_path, num_images=4, img_name = "plot_tmp"):
 
     model.eval()
     model.to(device)

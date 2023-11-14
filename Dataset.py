@@ -3,13 +3,11 @@ import os
 import torch
 import Config
 import torch
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, DataLoader
 
 hymenoptera_data_dir = Config.HYMENOPTERA_DATA_PATH
 dogtiny_data_dir = Config.DOGTINY_DATA_PATH
-batch_size = Config.BATCH_SIZE
 img_size = Config.IMG_SIZE
-num_workers = Config.NUM_WORKERS
 
 data_transforms = {
     'train': transforms.Compose([
@@ -28,10 +26,10 @@ data_transforms = {
 }
 
 
-def hymenoptera_dataloaders():
+def hymenoptera_dataloaders(batch_size,num_workers):
     image_datasets = {x: datasets.ImageFolder(os.path.join(hymenoptera_data_dir, x),
                     data_transforms[x]) for x in ['train', 'val']}
-    dataloaders = {x: torch.utils.data.DataLoader(image_datasets[x], batch_size=batch_size,
+    dataloaders = {x: DataLoader(image_datasets[x], batch_size=batch_size,
                     shuffle=True, pin_memory = True, num_workers=num_workers) for x in ['train', 'val']}
     dataset_sizes = {x: len(image_datasets[x]) for x in ['train', 'val']}
     print(dataset_sizes)
@@ -39,11 +37,11 @@ def hymenoptera_dataloaders():
     return dataloaders, class_names, dataset_sizes
 
 
-def dogtiny_dataloaders():
+def dogtiny_dataloaders(batch_size,num_workers):
     train_ds, train_valid_ds = [datasets.ImageFolder(
         os.path.join(dogtiny_data_dir, 'train_valid_test', folder),
         data_transforms[folder]) for folder in ['train', 'val']]
-    train_iter, train_valid_iter = [torch.utils.data.DataLoader(
+    train_iter, train_valid_iter = [DataLoader(
         dataset, batch_size = batch_size, pin_memory = True, num_workers=num_workers, shuffle=True, drop_last=True)
         for dataset in (train_ds, train_valid_ds)]
     dataloaders = {'train':train_iter, 'val': train_valid_iter}
@@ -58,8 +56,3 @@ def dogtiny_dataloaders():
     return dataloaders, class_names, dataset_sizes
 
 
-def get_data(data_name):
-    if data_name == 'hymenoptera':
-        return hymenoptera_dataloaders()
-    if data_name == 'dogtiny':
-        return dogtiny_dataloaders()

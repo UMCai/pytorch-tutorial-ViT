@@ -1,0 +1,13 @@
+# data
+data_name: 'hymenoptera'
+num_classes: 2
+
+# model
+model_name: 'ViT_reproduce_t_16'
+num_epochs: 3
+lr: 0.0007
+batch_size: 6
+num_workers: 4
+
+# mode
+mode: 'training'

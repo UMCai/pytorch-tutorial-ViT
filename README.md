@@ -7,6 +7,17 @@ This repo aims to reproduce the code from [paper](https://arxiv.org/abs/2010.119
 4. how to use [**ignite**](https://pytorch-ignite.ai/) to train and evaluate the model
 
 
+## Quick start 
+Run 
+~~~
+$ python main.py -c config.yaml
+~~~ 
+while training, use tensorboard to moniter the progress,
+~~~
+$ tensorboard --logdir=.
+~~~
+
+
 ## 0. Environment setup:
 Use conda to create the virtual env, all the python packages are explicitly stored within.
 

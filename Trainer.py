@@ -4,14 +4,13 @@ import os
 import Config
 
 device = Config.DEVICE
-model_path = Config.MODEL_PATH
 
 
 ##################################################################
 # This is a plain pytorch training loop with validation embedded
 # But the problem is also clear, no logging for loss, no visulaization for the loss/accuracy
 # to improve it, we can use ignite
-def train_classification_model(data, model, criterion, optimizer, scheduler, num_epochs=25):
+def train_classification_model(data, model, criterion, optimizer, scheduler, model_path, num_epochs=25):
     since = time.time()
 
     dataloaders, class_names, dataset_sizes = data
