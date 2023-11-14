@@ -44,7 +44,7 @@ def main():
         figure_path = Config.DOGTINY_FIGURE_PATH
     if data_name=='hymenoptera':
         model_checkpoint_path = Config.HYMENOPTERA_MODEL_PATH 
-        data = dogtiny_dataloaders(cfg['batch_size'],cfg['num_workers'])
+        data = hymenoptera_dataloaders(cfg['batch_size'],cfg['num_workers'])
         figure_path = Config.HYMENOPTERA_FIGURE_PATH
     
     if cfg['model_name'] == 'ViT_b_16':

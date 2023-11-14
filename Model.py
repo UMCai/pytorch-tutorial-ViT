@@ -34,7 +34,7 @@ def ViT_b_16(num_ft = 2):
 
 
 
-def ViT_reproduce_t_16(img_size, patch_size = 16, num_hiddens = 512, 
+def ViT_reproduce_t_16(img_size = 224, patch_size = 16, num_hiddens = 512, 
                        mlp_num_hiddens = 2048, num_heads = 8, 
                        num_blks = 6, emb_dropout = 0.1,
                        blk_dropout = 0.1, num_ft = 2):
